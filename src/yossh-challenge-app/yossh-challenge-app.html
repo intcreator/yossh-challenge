@@ -125,15 +125,15 @@
         <div id="new-expense">
           <label>
             <span>Date</span><br>
-            <vaadin-date-picker id="date" value="{{date}}" on-change="validateDate"></vaadin-date-picker>
+            <vaadin-date-picker id="date" value="{{date}}"></vaadin-date-picker>
           </label>
           <label>
             <span>Value ($)</span><br>
-            <input id="value" value="{{value}}" type="text">
+            <input id="value" value="{{value::input}}" type="text">
           </label>
           <label>
             <span>Reason</span><br>
-            <input id="reason" value="{{reason}}" type="text">
+            <input id="reason" value="{{reason::input}}" type="text">
           </label>
           <button class="yossh-button" on-click="addExpense" disabled$="[[!validate(date, value, reason)]]">Add</button>
         </div>
@@ -148,7 +148,7 @@
         <template is="dom-repeat" items="[[tableData]]">
           <tr>
             <td>[[item.value.date]]</td>
-            <td class="money-cell">[[item.value.value]]</td>
+            <td class="money-cell">[[computeValue(item.value.value)]]</td>
             <td class="money-cell">[[computeVAT(item.value.value)]]</td>
             <td>[[item.value.reason]]</td>
           </tr>
@@ -193,15 +193,9 @@
       }
 
       validate(date, value, reason) {
-        return date !== NaN && date !== '';
-      }
-
-      validateValue(e) {
-        return (e.target.value * 100) % 1 === 0;
-      }
-
-      validateReason(e) {
-        return e.target.value !== '';
+        return  date !== NaN && date !== ''
+          &&    value !== '' && (value * 100) % 1 === 0
+          &&    reason !== undefined && reason !== '';
       }
 
       addExpense() {
@@ -210,7 +204,7 @@
         const reasonInput = this.shadowRoot.querySelector('#reason');
         firebase.database().ref('expenses/').push({
           date: dateInput.value,
-          value: valueInput.value,
+          value: valueInput.value * 100,
           reason: reasonInput.value
         });
         dateInput.value = '';
@@ -218,8 +212,12 @@
         reasonInput.value = '';
       }
 
+      computeValue(value) {
+        return value / 100;
+      }
+
       computeVAT(value) {
-        return 0.2 * value;
+        return 0.2 * value / 100;
       }
     }
 
