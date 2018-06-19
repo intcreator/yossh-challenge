@@ -1,50 +1,225 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../../bower_components/polymer/lib/elements/dom-repeat.html">
+<link rel="import" href="../../bower_components/vaadin-date-picker/vaadin-date-picker.html">
 
 <dom-module id="yossh-challenge-app">
   <template>
+
     <style>
       :host {
+        font-family: 'Helvetica', sans-serif;
         display: block;
       }
+
+      h1 {
+        font-weight: 100;
+      }
+
+      table {
+        width: 100%;
+      }
+
+      td, th {
+        padding: .3em;
+      }
+
+      th {
+        border-bottom: solid .1em black;
+      }
+
+      tr + tr {
+        border-top: solid .05em grey;
+      }
+
+      input {
+        font-size: 1em;
+        padding: .5em;
+        width: 100%;
+        box-sizing: border-box;
+        border: solid #999 .05em;
+        border-radius: .2em;
+      }
+
+      input:focus {
+        outline: none;
+        border-color: #000;
+      }
+
+			.yossh-button {
+				font-size: 1em;
+				text-align: center;
+				display: inline-block;
+				padding: .5em 1em;
+				color: #eee;
+				background-color: #000;
+				border-radius: .2em;
+				border: solid #333 .05em;
+				cursor: pointer;
+				text-decoration: none;
+			}
+
+			.yossh-button:hover, .yossh-button:focus {
+        outline: none;
+				background-color: #444;
+				text-decoration: none;
+			}
+
+			.yossh-button:active {
+				background-color: #eee;
+				color: #000;
+			}
+
+			.yossh-button:visited {
+				color: inherit;
+			}
+
+			.yossh-button[disabled] {
+				color: #777;
+        background-color: #999;
+				border-color: #777;
+				cursor: default;
+			}
+
+			.yossh-button[disabled]:hover {
+				background-color: #999;
+			}
+
+      .input-column {
+        display: inline-block;
+        width: 30%;
+      }
+
+      .money-cell {
+        text-align: right;
+      }
+
+      #container {
+        padding: 1em;
+        max-width: 800px;
+        margin: auto;
+      }
+
+      #container > * + * {
+        margin-top: 1em;
+      }
+
+      #new-expense {
+        display: flex;
+        align-items: flex-end
+      }
+
+      #new-expense > * {
+        flex-grow: 1;
+      }
+
+      #new-expense > * + * {
+        margin-left: 1em;
+      }
+
     </style>
-    <h1>Expenses</h1>
-    <div>
-      <h2>Enter new expense</h2>
-      <label>Date<input type="text"></label>
-      <label>Value<input type="text"></label>
-      <label>Reason<input type="text"></label>
+
+    <div id="container">
+      <h1>Expenses</h1>
+      <div>
+        <h2>Enter new expense</h2>
+        <div id="new-expense">
+          <label>
+            <span>Date</span><br>
+            <vaadin-date-picker id="date" value="{{date}}" on-change="validateDate"></vaadin-date-picker>
+          </label>
+          <label>
+            <span>Value ($)</span><br>
+            <input id="value" value="{{value}}" type="text">
+          </label>
+          <label>
+            <span>Reason</span><br>
+            <input id="reason" value="{{reason}}" type="text">
+          </label>
+          <button class="yossh-button" on-click="addExpense" disabled$="[[!validate(date, value, reason)]]">Add</button>
+        </div>
+      </div>
+      <table>
+        <tr>
+          <th>Date</th>
+          <th>Value</th>
+          <th>VAT</th>
+          <th>Reason</th>
+        </tr>
+        <template is="dom-repeat" items="[[tableData]]">
+          <tr>
+            <td>[[item.value.date]]</td>
+            <td class="money-cell">[[item.value.value]]</td>
+            <td class="money-cell">[[computeVAT(item.value.value)]]</td>
+            <td>[[item.value.reason]]</td>
+          </tr>
+        </template>
+      </table>
     </div>
-    <table border="1">
-      <tr>
-        <th>Date</th>
-        <th>Value</th>
-        <th>VAT</th>
-        <th>Reason</th>
-      </tr>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-    </table>
-    <!-- <h2>Hello [[prop1]]!</h2> -->
+
   </template>
 
+  <!-- FIREBASE IMPORTS -->
+  <script src="https://www.gstatic.com/firebasejs/5.0.4/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.0.4/firebase-database.js"></script>
   <script>
     /**
      * @customElement
      * @polymer
      */
     class YosshChallengeApp extends Polymer.Element {
+
       static get is() { return 'yossh-challenge-app'; }
+
       static get properties() {
         return {
-          prop1: {
-            type: String,
-            value: 'yossh-challenge-app'
+          tableData: {
+            type: Object
           }
         };
+      }
+
+      connectedCallback() {
+        super.connectedCallback();
+        firebase.initializeApp({
+          apiKey: "AIzaSyCK2M0sOTyjiqjEtnmR2mVhzQ2UhA4x8t4",  // Auth / General Use
+          databaseURL: "https://yossh-challenge.firebaseio.com", // Realtime Database
+        });
+
+        const expenseData = firebase.database().ref('expenses/');
+        expenseData.on('value', (snapshot) => {
+          this.tableData = Object.entries(snapshot.val()).map(([key, value]) => ({key,value}));
+          console.log(this.tableData)
+        });
+      }
+
+      validate(date, value, reason) {
+        return date !== NaN && date !== '';
+      }
+
+      validateValue(e) {
+        return (e.target.value * 100) % 1 === 0;
+      }
+
+      validateReason(e) {
+        return e.target.value !== '';
+      }
+
+      addExpense() {
+        const dateInput = this.shadowRoot.querySelector('#date');
+        const valueInput = this.shadowRoot.querySelector('#value');
+        const reasonInput = this.shadowRoot.querySelector('#reason');
+        firebase.database().ref('expenses/').push({
+          date: dateInput.value,
+          value: valueInput.value,
+          reason: reasonInput.value
+        });
+        dateInput.value = '';
+        valueInput.value = '';
+        reasonInput.value = '';
+      }
+
+      computeVAT(value) {
+        return 0.2 * value;
       }
     }
 
