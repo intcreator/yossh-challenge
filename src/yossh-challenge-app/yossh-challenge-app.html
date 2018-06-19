@@ -137,7 +137,9 @@
           </label>
           <button class="yossh-button" on-click="addExpense" disabled$="[[!validate(date, value, reason)]]">Add</button>
         </div>
+        <p>[[validationMessage]]</p>
       </div>
+      <h2>Previous expenses</h2>
       <table>
         <tr>
           <th>Date</th>
@@ -150,7 +152,7 @@
             <td>[[item.value.date]]</td>
             <td class="money-cell">[[computeValue(item.value.value)]]</td>
             <td class="money-cell">[[computeVAT(item.value.value)]]</td>
-            <td>[[item.value.reason]]</td>
+            <td width="40%">[[item.value.reason]]</td>
           </tr>
         </template>
       </table>
@@ -174,6 +176,9 @@
         return {
           tableData: {
             type: Object
+          },
+          validationMessage: {
+            type: String
           }
         };
       }
@@ -193,9 +198,19 @@
       }
 
       validate(date, value, reason) {
-        return  date !== NaN && date !== ''
-          &&    value !== '' && (value * 100) % 1 === 0
-          &&    reason !== undefined && reason !== '';
+        if(date === NaN || date === '') {
+          this.validationMessage = 'Enter a date.'
+          return false;
+        } else if(value === '' || (value * 100) % 1 !== 0) {
+          this.validationMessage = 'Enter a valid number for the value of the expense in dollars.'
+          return false;
+        } else if(reason === undefined || reason === '') {
+          this.validationMessage = 'Enter a reason for the expense.'
+          return false;
+        } else {
+          this.validationMessage = 'Ready to add expense.'
+          return true;
+        }
       }
 
       addExpense() {
@@ -213,11 +228,11 @@
       }
 
       computeValue(value) {
-        return value / 100;
+        return `$ ${(value / 100).toFixed(2)}`;
       }
 
       computeVAT(value) {
-        return 0.2 * value / 100;
+        return `$ ${(0.2 * value / 100).toFixed(2)}`;
       }
     }
 
