@@ -1,0 +1,7 @@
+{
+  "name": "yossh-challenge",
+  "short_name": "yossh-challenge",
+  "description": "Yossh Coding Challenge",
+  "start_url": "/",
+  "display": "standalone"
+}

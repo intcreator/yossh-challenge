@@ -1,0 +1,53 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+<dom-module id="yossh-challenge-app">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <h1>Expenses</h1>
+    <div>
+      <h2>Enter new expense</h2>
+      <label>Date<input type="text"></label>
+      <label>Value<input type="text"></label>
+      <label>Reason<input type="text"></label>
+    </div>
+    <table border="1">
+      <tr>
+        <th>Date</th>
+        <th>Value</th>
+        <th>VAT</th>
+        <th>Reason</th>
+      </tr>
+      <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+    </table>
+    <!-- <h2>Hello [[prop1]]!</h2> -->
+  </template>
+
+  <script>
+    /**
+     * @customElement
+     * @polymer
+     */
+    class YosshChallengeApp extends Polymer.Element {
+      static get is() { return 'yossh-challenge-app'; }
+      static get properties() {
+        return {
+          prop1: {
+            type: String,
+            value: 'yossh-challenge-app'
+          }
+        };
+      }
+    }
+
+    window.customElements.define(YosshChallengeApp.is, YosshChallengeApp);
+  </script>
+</dom-module>
